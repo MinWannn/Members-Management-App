@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 const LandingPage = () => {
     return (
-        <Container maxWidth="md">
+        <Container maxWidth="xl">
             <Box sx={{ mt: 8, textAlign: 'center' }}>
                 <Typography variant="h2" component="h1" gutterBottom>
                     Members App
