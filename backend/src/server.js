@@ -13,15 +13,16 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+}));
 app.use(cors({
     origin: function (origin, callback) {
         const allowedOrigins = [
             'http://localhost:5173',
             'http://localhost:4173',
             process.env.FRONTEND_URL,
-            'https://kubikmembersmanagement.netlify.app',
-            'https://members.kubik.gr'
+            'https://kubikmembersmanagement.netlify.app'
         ].filter(Boolean);
 
         if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -30,7 +31,8 @@ app.use(cors({
             callback(new Error('Not allowed by CORS'));
         }
     },
-    credentials: true
+    credentials: true,
+    exposedHeaders: ['Content-Disposition']
 }));
 app.use(morgan('dev'));
 app.use(express.json());
