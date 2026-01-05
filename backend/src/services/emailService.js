@@ -18,7 +18,7 @@ const sendEmail = async (to, subject, html) => {
 
     try {
         const info = await transporter.sendMail({
-            from: `"${process.env.EMAIL_FROM_NAME || 'SEPAM Members'}" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+            from: `"${process.env.EMAIL_FROM_NAME || 'Members App'}" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
             to,
             subject,
             html,
@@ -36,7 +36,7 @@ const sendRegistrationNotificationToAdmin = async (user) => {
     const html = `
     <h2>New Member Registration</h2>
     <p>A new member has registered and is pending approval.</p>
-    <p><strong>Name:</strong> ${user.full_name}</p>
+    <p><strong>Name:</strong> ${user.first_name} ${user.last_name}</p>
     <p><strong>Email:</strong> ${user.email}</p>
     <p><strong>Member Type:</strong> ${user.member_type}</p>
     <p>Please log in to the admin dashboard to approve or deny this request.</p>
@@ -50,9 +50,31 @@ const sendRegistrationConfirmationToUser = async (user) => {
     const subject = 'Registration Received - Pending Approval';
     const html = `
     <h2>Registration Received</h2>
-    <p>Hello ${user.full_name},</p>
+    <p>Hello ${user.first_name} ${user.last_name},</p>
     <p>Thank you for registering. Your account is currently under review.</p>
     <p>You will receive another email once your account has been approved.</p>
+  `;
+    await sendEmail(user.email, subject, html);
+};
+
+const sendApprovalEmail = async (user) => {
+    const subject = 'Account Approved';
+    const html = `
+    <h2>Account Approved</h2>
+    <p>Hello ${user.first_name} ${user.last_name},</p>
+    <p>Your account has been approved! You can now log in and access your profile.</p>
+    <p>Thank you for joining us.</p>
+  `;
+    await sendEmail(user.email, subject, html);
+};
+
+const sendDenialEmail = async (user) => {
+    const subject = 'Account Registration Denied';
+    const html = `
+    <h2>Registration Denied</h2>
+    <p>Hello ${user.first_name} ${user.last_name},</p>
+    <p>Unfortunately, your registration has been denied.</p>
+    <p>If you believe this is an error, please contact us.</p>
   `;
     await sendEmail(user.email, subject, html);
 };
@@ -60,5 +82,7 @@ const sendRegistrationConfirmationToUser = async (user) => {
 module.exports = {
     sendEmail,
     sendRegistrationNotificationToAdmin,
-    sendRegistrationConfirmationToUser
+    sendRegistrationConfirmationToUser,
+    sendApprovalEmail,
+    sendDenialEmail
 };
