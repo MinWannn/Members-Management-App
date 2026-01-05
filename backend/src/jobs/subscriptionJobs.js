@@ -19,7 +19,7 @@ const checkExpiringSubscriptions = async () => {
         const formattedDate = format(targetDate, 'yyyy-MM-dd');
 
         const result = await query(
-            `SELECT s.*, u.email, u.full_name 
+            `SELECT s.*, u.email, u.first_name, u.last_name 
        FROM subscriptions s
        JOIN users u ON s.user_id = u.id
        WHERE s.end_date = $1 
@@ -32,9 +32,9 @@ const checkExpiringSubscriptions = async () => {
             // Send email
             await emailService.sendEmail(
                 sub.email,
-                'Subscription Expiring Soon - SEPAM Members',
+                'Subscription Expiring Soon',
                 `<h2>Subscription Expiring Soon</h2>
-         <p>Hello ${sub.full_name},</p>
+         <p>Hello ${sub.first_name} ${sub.last_name},</p>
          <p>Your subscription is expiring on ${format(new Date(sub.end_date), 'dd/MM/yyyy')}.</p>
          <p>Please renew to maintain your status.</p>`
             );
@@ -51,7 +51,7 @@ const checkExpiredSubscriptions = async () => {
     try {
         // Find active subscriptions that have passed their end date
         const result = await query(
-            `SELECT s.*, u.email, u.full_name 
+            `SELECT s.*, u.email, u.first_name, u.last_name 
        FROM subscriptions s
        JOIN users u ON s.user_id = u.id
        WHERE s.end_date < CURRENT_DATE 
@@ -80,9 +80,9 @@ const checkExpiredSubscriptions = async () => {
                 // Notify user
                 await emailService.sendEmail(
                     sub.email,
-                    'Subscription Expired - SEPAM Members',
+                    'Subscription Expired',
                     `<h2>Subscription Expired</h2>
-           <p>Hello ${sub.full_name},</p>
+           <p>Hello ${sub.first_name} ${sub.last_name},</p>
            <p>Your subscription has expired. Your account has been converted to 'Υποστηρικτής'.</p>`
                 );
             }
