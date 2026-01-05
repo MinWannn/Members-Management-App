@@ -20,7 +20,8 @@ app.use(cors({
             'http://localhost:5173',
             'http://localhost:4173',
             process.env.FRONTEND_URL,
-            'https://kubikmembersmanagement.netlify.app'
+            'https://kubikmembersmanagement.netlify.app',
+            'https"//members.kubik.gr'
         ].filter(Boolean);
 
         if (!origin || allowedOrigins.indexOf(origin) !== -1) {
