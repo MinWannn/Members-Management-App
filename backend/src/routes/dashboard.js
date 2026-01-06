@@ -7,6 +7,8 @@ router.use(authenticateToken);
 router.use(requireRole(['superadmin']));
 
 router.get('/stats', dashboardController.getStats);
-router.get('/charts', dashboardController.getCharts);
+router.get('/statistics', dashboardController.getStatistics);
+router.get('/logs', dashboardController.getLogs);
+router.post('/check-expired', dashboardController.checkExpiredMembers);
 
 module.exports = router;
