@@ -22,7 +22,7 @@ app.use(cors({
             'http://localhost:5173',
             'http://localhost:4173',
             process.env.FRONTEND_URL,
-            'https://members.kubik.gr'
+            'https://kubikmembersmanagement.netlify.app'
         ].filter(Boolean);
 
         if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -50,6 +50,7 @@ const subscriptionRoutes = require('./routes/subscriptions');
 const paymentRoutes = require('./routes/payments');
 const dashboardRoutes = require('./routes/dashboard');
 const exportRoutes = require('./routes/export');
+const settingsRoutes = require('./routes/settings');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -57,6 +58,7 @@ app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/export', exportRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
