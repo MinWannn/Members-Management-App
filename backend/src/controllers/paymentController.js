@@ -101,10 +101,10 @@ const addManualPayment = async (req, res) => {
 
             const subscriptionResult = await client.query(
                 `INSERT INTO subscriptions 
-                (user_id, member_type, start_date, end_date, duration_months, status) 
-                VALUES ($1, 'Τακτικό', $2, $3, $4, 'active') 
+                (user_id, member_type, start_date, end_date, duration_months, price, status) 
+                VALUES ($1, 'Τακτικό', $2, $3, $4, $5, 'active') 
                 RETURNING *`,
-                [user_id, startDate, endDate, duration_months]
+                [user_id, startDate, endDate, duration_months, amount]
             );
 
             const subscription = subscriptionResult.rows[0];
