@@ -14,18 +14,25 @@ const getAllUsers = async (req, res) => {
 const getUserById = async (req, res) => {
     try {
         const { id } = req.params;
-        const result = await query('SELECT id, email, first_name, last_name, fathers_name, id_number, phone, address, role, status, member_type, created_at FROM users WHERE id = $1', [id]);
+        const result = await query('SELECT * FROM users WHERE id = $1', [id]);
 
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'User not found' });
         }
 
+        const user = result.rows[0];
+        console.log(`[DEBUG] getUserById(${id}) found:`, user.email, user.fathers_name, user.id_number);
+
         // Check permissions: superadmin or own profile
+        // Note: req.user.id is from token. 
         if (req.user.role !== 'superadmin' && req.user.id !== parseInt(id)) {
             return res.status(403).json({ message: 'Access denied' });
         }
 
-        res.json(result.rows[0]);
+        // Remove password_hash before sending
+        delete user.password_hash;
+
+        res.json(user);
     } catch (error) {
         console.error('Get user error:', error);
         res.status(500).json({ message: 'Server error' });
