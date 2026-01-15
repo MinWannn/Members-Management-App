@@ -10,6 +10,7 @@ const Navigation = () => {
     const menuItems = user?.role === 'superadmin' ? [
         { path: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
         { path: '/admin/members', label: 'All Members', icon: '👥' },
+        { path: '/admin/add-member', label: 'Add Member', icon: '➕' },
         { path: '/admin/expiring', label: 'Expiring Members', icon: '⏰' },
         { path: '/admin/statistics', label: 'Statistics', icon: '📈' },
         { path: '/admin/logs', label: 'Activity Logs', icon: '📋' },
@@ -51,8 +52,8 @@ const Navigation = () => {
                             key={item.path}
                             to={item.path}
                             className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${isActive(item.path)
-                                    ? 'bg-blue-600 text-white'
-                                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                                ? 'bg-blue-600 text-white'
+                                : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                                 }`}
                         >
                             <span className="text-xl">{item.icon}</span>
