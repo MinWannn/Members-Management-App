@@ -40,11 +40,6 @@ const generateUserHistoryPDF = (user, history, payments, res) => {
     doc.end();
 };
 
-module.exports = {
-    generateUserHistoryPDF,
-    generateMembersPDF
-};
-
 const generateMembersPDF = (members, columns, title, res) => {
     const doc = new PDFDocument({ margin: 30, layout: 'landscape' });
     doc.pipe(res);
@@ -124,4 +119,9 @@ const generateMembersPDF = (members, columns, title, res) => {
     });
 
     doc.end();
+};
+
+module.exports = {
+    generateUserHistoryPDF,
+    generateMembersPDF
 };
