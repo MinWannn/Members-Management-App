@@ -11,6 +11,7 @@ router.get('/find-duplicates', requireRole(['superadmin']), userController.findD
 router.get('/:id', userController.getUserById);
 router.get('/:id/history', requireRole(['superadmin']), userController.getUserHistory);
 router.post('/', requireRole(['superadmin']), userController.createMember);
+router.post('/merge', requireRole(['superadmin']), userController.mergeUsers);
 router.post('/:id/approve', requireRole(['superadmin']), userController.approveUser);
 router.post('/:id/deny', requireRole(['superadmin']), userController.denyUser);
 router.put('/:id', requireRole(['superadmin']), userController.updateUser);
