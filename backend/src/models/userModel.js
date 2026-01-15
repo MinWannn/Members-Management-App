@@ -5,7 +5,7 @@ const createUser = async (userData) => {
     const sql = `
     INSERT INTO users (email, password_hash, first_name, last_name, fathers_name, id_number, phone, address, member_type)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-    RETURNING id, email, first_name, last_name, role, status, member_type, created_at
+    RETURNING *
   `;
     const values = [email, password_hash, first_name, last_name, fathers_name, id_number, phone, address, member_type];
     const result = await query(sql, values);
