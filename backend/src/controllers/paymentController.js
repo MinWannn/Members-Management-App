@@ -1,4 +1,4 @@
-const { query } = require('../config/database');
+const { query, pool } = require('../config/database');
 const stripeService = require('../services/stripeService');
 const emailService = require('../services/emailService');
 
@@ -83,8 +83,11 @@ const addManualPayment = async (req, res) => {
     try {
         const { user_id, amount, payment_date, payment_method, notes, duration_months } = req.body;
 
+        if (!user_id || !amount || !payment_date || !duration_months) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
+
         // Get client from pool for transaction
-        const { pool } = require('../config/database');
         client = await pool.connect();
 
         // Start transaction
@@ -94,7 +97,7 @@ const addManualPayment = async (req, res) => {
             // Create subscription
             const startDate = new Date(payment_date);
             const endDate = new Date(startDate);
-            endDate.setMonth(endDate.getMonth() + duration_months);
+            endDate.setMonth(endDate.getMonth() + parseInt(duration_months));
 
             const subscriptionResult = await client.query(
                 `INSERT INTO subscriptions 
@@ -121,31 +124,27 @@ const addManualPayment = async (req, res) => {
                 [user_id]
             );
 
-            // Log action
-            // actionLogger uses default query, which is fine for logging, but to be safe and consistent with transaction
-            // we should probably commit first, then log. Or use client if actionLogger supports it.
-            // Current actionLogger.logPayment likely uses 'query' from database.js (one-off).
-            // This is acceptable as logging doesn't necessarily need to be in the same transaction 
-            // (if we want to log attempts even if failed? No, we want to log success).
-            // So we'll log AFTER commit.
-
             await client.query('COMMIT');
 
             // Log action after commit
-            const actionLogger = require('../services/actionLogger');
-            await actionLogger.logPayment(user_id, req.user.id, amount, subscription.id);
+            try {
+                const actionLogger = require('../services/actionLogger');
+                await actionLogger.logPayment(user_id, req.user.id, amount, subscription.id);
+            } catch (logError) {
+                console.error('Failed to log payment action:', logError);
+            }
 
             res.status(201).json({
                 payment: paymentResult.rows[0],
                 subscription: subscription
             });
         } catch (error) {
-            await client.query('ROLLBACK');
+            if (client) await client.query('ROLLBACK');
             throw error;
         }
     } catch (error) {
         console.error('Add manual payment error:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error: ' + error.message });
     } finally {
         if (client) client.release();
     }
