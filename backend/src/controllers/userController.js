@@ -185,12 +185,79 @@ const getExpiringMembers = async (req, res) => {
             `SELECT * FROM users 
              WHERE member_type = 'Τακτικό' 
              AND status = 'approved'
-             AND created_at + INTERVAL '1 year' BETWEEN NOW() AND NOW() + INTERVAL '30 days'
+             AND created_at + INTERVAL '1 year' BETWEEN NOW() AND NOW() + INTERVAL '10 days'
              ORDER BY created_at ASC`
         );
         res.json(result.rows);
     } catch (error) {
         console.error('Get expiring members error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+const createMember = async (req, res) => {
+    try {
+        const {
+            email, password, first_name, last_name, fathers_name,
+            id_number, phone, address, member_type, sendWelcomeEmail
+        } = req.body;
+
+        // Check if user already exists
+        const existingUser = await query('SELECT id FROM users WHERE email = $1', [email]);
+        if (existingUser.rows.length > 0) {
+            return res.status(400).json({ message: 'User with this email already exists' });
+        }
+
+        // Generate password if not provided
+        const bcrypt = require('bcryptjs');
+        const generatedPassword = password || Math.random().toString(36).slice(-10);
+        const salt = await bcrypt.genSalt(10);
+        const password_hash = await bcrypt.hash(generatedPassword, salt);
+
+        // Create user with approved status
+        const result = await query(
+            `INSERT INTO users 
+             (email, password_hash, first_name, last_name, fathers_name, id_number, phone, address, member_type, role, status, approved_at, approved_by)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'user', 'approved', NOW(), $10)
+             RETURNING *`,
+            [email, password_hash, first_name, last_name, fathers_name, id_number, phone, address, member_type, req.user.id]
+        );
+
+        const newUser = result.rows[0];
+
+        // Log action
+        const actionLogger = require('../services/actionLogger');
+        await actionLogger.logAction({
+            userId: newUser.id,
+            actionType: 'member_creation',
+            actionDescription: `Member manually created by superadmin`,
+            performedBy: req.user.id,
+            metadata: { created_by: 'superadmin' }
+        });
+
+        // Send welcome email if requested
+        if (sendWelcomeEmail) {
+            try {
+                await emailService.sendWelcomeEmail(newUser, generatedPassword);
+            } catch (emailError) {
+                console.error('Welcome email failed:', emailError);
+                // Don't fail the request if email fails
+            }
+        }
+
+        res.status(201).json({
+            message: 'Member created successfully',
+            user: {
+                id: newUser.id,
+                email: newUser.email,
+                first_name: newUser.first_name,
+                last_name: newUser.last_name,
+                member_type: newUser.member_type
+            },
+            temporaryPassword: password ? null : generatedPassword // Only return if auto-generated
+        });
+    } catch (error) {
+        console.error('Create member error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -203,5 +270,6 @@ module.exports = {
     getUserHistory,
     updateUser,
     deleteUser,
-    getExpiringMembers
+    getExpiringMembers,
+    createMember
 };
