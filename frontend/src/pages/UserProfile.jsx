@@ -13,19 +13,24 @@ const UserProfile = () => {
     const [subscriptions, setSubscriptions] = useState([]);
     const [payments, setPayments] = useState([]);
     const [history, setHistory] = useState([]);
+    const [profile, setProfile] = useState(user); // Initialize with context user, but update with fetch
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [subRes, payRes, histRes] = await Promise.all([
+                const [subRes, payRes, histRes, profileRes] = await Promise.all([
                     api.get(`/subscriptions/user/${user.id}`),
                     api.get(`/payments/user/${user.id}`),
-                    api.get(`/export/user/${user.id}/history`, { responseType: 'json' }).catch(() => ({ data: [] }))
+                    api.get(`/export/user/${user.id}/history`, { responseType: 'json' }).catch(() => ({ data: [] })),
+                    api.get('/auth/me').catch(() => ({ data: user })) // Fallback to context user if fail
                 ]);
 
                 setSubscriptions(subRes.data);
                 setPayments(payRes.data);
+                if (profileRes.data) {
+                    setProfile(profileRes.data);
+                }
                 // setHistory(histRes.data);
             } catch (error) {
                 console.error('Error fetching profile data:', error);
@@ -54,31 +59,31 @@ const UserProfile = () => {
                         <Grid container spacing={2}>
                             <Grid item xs={12} sm={6}>
                                 <Typography variant="subtitle2" color="text.secondary">First Name</Typography>
-                                <Typography variant="body1">{user.first_name}</Typography>
+                                <Typography variant="body1">{profile.first_name}</Typography>
                             </Grid>
                             <Grid item xs={12} sm={6}>
                                 <Typography variant="subtitle2" color="text.secondary">Last Name</Typography>
-                                <Typography variant="body1">{user.last_name}</Typography>
+                                <Typography variant="body1">{profile.last_name}</Typography>
                             </Grid>
                             <Grid item xs={12} sm={6}>
                                 <Typography variant="subtitle2" color="text.secondary">Father's Name</Typography>
-                                <Typography variant="body1">{user.fathers_name || '-'}</Typography>
+                                <Typography variant="body1">{profile.fathers_name || '-'}</Typography>
                             </Grid>
                             <Grid item xs={12} sm={6}>
                                 <Typography variant="subtitle2" color="text.secondary">ID Number</Typography>
-                                <Typography variant="body1">{user.id_number || '-'}</Typography>
+                                <Typography variant="body1">{profile.id_number || '-'}</Typography>
                             </Grid>
                             <Grid item xs={12} sm={6}>
                                 <Typography variant="subtitle2" color="text.secondary">Email</Typography>
-                                <Typography variant="body1">{user.email}</Typography>
+                                <Typography variant="body1">{profile.email}</Typography>
                             </Grid>
                             <Grid item xs={12} sm={6}>
                                 <Typography variant="subtitle2" color="text.secondary">Phone</Typography>
-                                <Typography variant="body1">{user.phone || '-'}</Typography>
+                                <Typography variant="body1">{profile.phone || '-'}</Typography>
                             </Grid>
                             <Grid item xs={12}>
                                 <Typography variant="subtitle2" color="text.secondary">Address</Typography>
-                                <Typography variant="body1">{user.address || '-'}</Typography>
+                                <Typography variant="body1">{profile.address || '-'}</Typography>
                             </Grid>
                         </Grid>
                     </Paper>
