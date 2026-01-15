@@ -80,78 +80,101 @@ const updateSubscription = async (req, res) => {
 };
 
 const manualUpgrade = async (req, res) => {
+    let client;
     try {
         const { userId } = req.params;
         const { member_type, duration_months, amount, payment_method, notes } = req.body;
 
-        // Verify user exists
-        const userResult = await query('SELECT * FROM users WHERE id = $1', [userId]);
-        if (userResult.rows.length === 0) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        const user = userResult.rows[0];
+        // Get client for transaction
+        const { pool } = require('../config/database');
+        client = await pool.connect();
 
-        // Calculate dates
-        const startDate = new Date();
-        const endDate = addMonths(startDate, duration_months);
+        await client.query('BEGIN');
 
-        // Create subscription
-        const subscriptionResult = await query(
-            `INSERT INTO subscriptions 
-             (user_id, member_type, duration_months, price, start_date, end_date, status, auto_renew)
-             VALUES ($1, $2, $3, $4, $5, $6, 'active', false)
-             RETURNING *`,
-            [userId, member_type, duration_months, amount, startDate, endDate]
-        );
-        const subscription = subscriptionResult.rows[0];
-
-        // Create payment record
-        const paymentResult = await query(
-            `INSERT INTO payments 
-             (user_id, subscription_id, amount, payment_method, payment_status, payment_date, notes)
-             VALUES ($1, $2, $3, $4, 'completed', NOW(), $5)
-             RETURNING *`,
-            [userId, subscription.id, amount, payment_method || 'bank_transfer', notes]
-        );
-
-        // Update user member_type
-        await query(
-            'UPDATE users SET member_type = $1, updated_at = NOW() WHERE id = $2',
-            [member_type, userId]
-        );
-
-        // Log action
-        const actionLogger = require('../services/actionLogger');
-        await actionLogger.logAction({
-            userId: userId,
-            actionType: 'manual_upgrade',
-            actionDescription: `Manual subscription upgrade: ${duration_months}-month ${member_type} (${payment_method})`,
-            performedBy: req.user.id,
-            metadata: {
-                subscription_id: subscription.id,
-                payment_id: paymentResult.rows[0].id,
-                amount: amount,
-                payment_method: payment_method
-            }
-        });
-
-        // Send confirmation email
-        const emailService = require('../services/emailService');
         try {
-            await emailService.sendSubscriptionConfirmation(user, subscription);
-        } catch (emailError) {
-            console.error('Email sending failed:', emailError);
-            // Don't fail the request if email fails
-        }
+            // Verify user exists
+            const userResult = await client.query('SELECT * FROM users WHERE id = $1', [userId]);
+            if (userResult.rows.length === 0) {
+                await client.query('ROLLBACK');
+                return res.status(404).json({ message: 'User not found' });
+            }
+            const user = userResult.rows[0];
 
-        res.status(201).json({
-            message: 'Subscription upgraded successfully',
-            subscription: subscription,
-            payment: paymentResult.rows[0]
-        });
+            // Calculate dates
+            const startDate = new Date();
+            const endDate = addMonths(startDate, duration_months);
+
+            // Create subscription
+            const subscriptionResult = await client.query(
+                `INSERT INTO subscriptions 
+                 (user_id, member_type, duration_months, price, start_date, end_date, status, auto_renew)
+                 VALUES ($1, $2, $3, $4, $5, $6, 'active', false)
+                 RETURNING *`,
+                [userId, member_type, duration_months, amount, startDate, endDate]
+            );
+            const subscription = subscriptionResult.rows[0];
+
+            // Create payment record
+            const paymentResult = await client.query(
+                `INSERT INTO payments 
+                 (user_id, subscription_id, amount, payment_method, payment_status, payment_date, notes)
+                 VALUES ($1, $2, $3, $4, 'completed', NOW(), $5)
+                 RETURNING *`,
+                [userId, subscription.id, amount, payment_method || 'bank_transfer', notes]
+            );
+
+            // Update user member_type
+            await client.query(
+                'UPDATE users SET member_type = $1, updated_at = NOW() WHERE id = $2',
+                [member_type, userId]
+            );
+
+            // Log action (after commit logic is better, but here we log internally first usually? 
+            // Stick to commit first pattern for external logs implies safer but action logs in DB should be in transaction)
+            // Wait, actionLogger writes to DB. If we want it to be part of transaction, we need to pass client or do it manual.
+            // Existing actionLogger uses one-off query.
+            // If we want guaranteed log, we should do it after commit if we don't pass client.
+            // We will commit first.
+
+            await client.query('COMMIT');
+
+            // Log action
+            const actionLogger = require('../services/actionLogger');
+            await actionLogger.logAction({
+                userId: userId,
+                actionType: 'manual_upgrade',
+                actionDescription: `Manual subscription upgrade: ${duration_months}-month ${member_type} (${payment_method})`,
+                performedBy: req.user.id,
+                metadata: {
+                    subscription_id: subscription.id,
+                    payment_id: paymentResult.rows[0].id,
+                    amount: amount,
+                    payment_method: payment_method
+                }
+            });
+
+            // Send confirmation email
+            const emailService = require('../services/emailService');
+            try {
+                await emailService.sendSubscriptionConfirmation(user, subscription);
+            } catch (emailError) {
+                console.error('Email sending failed:', emailError);
+            }
+
+            res.status(201).json({
+                message: 'Subscription upgraded successfully',
+                subscription: subscription,
+                payment: paymentResult.rows[0]
+            });
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        }
     } catch (error) {
         console.error('Manual upgrade error:', error);
         res.status(500).json({ message: 'Server error' });
+    } finally {
+        if (client) client.release();
     }
 };
 
