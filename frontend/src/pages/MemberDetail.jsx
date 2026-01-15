@@ -146,6 +146,7 @@ const MemberDetail = () => {
     };
 
     const handleEditClick = () => {
+        console.log('Member data for edit:', member);
         setEditForm({
             first_name: member.first_name || '',
             last_name: member.last_name || '',
@@ -452,6 +453,13 @@ const MemberDetail = () => {
                     {notification.message}
                 </Alert>
             </Snackbar>
+            {/* Debug: Show raw member data */}
+            <Box sx={{ mt: 4, p: 2, bgcolor: '#f5f5f5', borderRadius: 1, overflow: 'auto' }}>
+                <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
+                    DEBUG DATA: {JSON.stringify(member, null, 2)}
+                </Typography>
+            </Box>
+
         </Container>
     );
 };
