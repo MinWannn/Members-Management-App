@@ -436,7 +436,7 @@ const findDuplicates = async (req, res) => {
 };
 
 const mergeUsers = async (req, res) => {
-    const client = await require('../config/database').pool.connect();
+    let client;
     try {
         const { targetUserId, sourceUserId } = req.body;
 
@@ -448,6 +448,7 @@ const mergeUsers = async (req, res) => {
             return res.status(400).json({ message: 'Cannot merge a user into themselves' });
         }
 
+        client = await require('../config/database').pool.connect();
         await client.query('BEGIN');
 
         // Check users exist
@@ -520,11 +521,11 @@ const mergeUsers = async (req, res) => {
         });
 
     } catch (error) {
-        await client.query('ROLLBACK');
+        if (client) await client.query('ROLLBACK');
         console.error('Merge users error:', error);
         res.status(500).json({ message: 'Server error during merge' });
     } finally {
-        client.release();
+        if (client) client.release();
     }
 };
 
