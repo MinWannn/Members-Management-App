@@ -27,6 +27,11 @@ const MemberDetail = () => {
     });
     const [upgrading, setUpgrading] = useState(false);
 
+    // Role Change Dialog State
+    const [openRoleDialog, setOpenRoleDialog] = useState(false);
+    const [newRole, setNewRole] = useState('');
+    const [changingRole, setChangingRole] = useState(false);
+
     // Notification state
     const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
 
@@ -103,6 +108,30 @@ const MemberDetail = () => {
         }
     };
 
+    const handleRoleChange = async () => {
+        try {
+            setChangingRole(true);
+            await api.patch(`/users/${id}/role`, { role: newRole });
+            setNotification({ open: true, message: `Role successfully changed to ${newRole}!`, severity: 'success' });
+            setOpenRoleDialog(false);
+            fetchData();
+        } catch (error) {
+            console.error('Error changing role:', error);
+            setNotification({
+                open: true,
+                message: error.response?.data?.message || 'Error changing role',
+                severity: 'error'
+            });
+        } finally {
+            setChangingRole(false);
+        }
+    };
+
+    const openRoleChangeDialog = () => {
+        setNewRole(member?.role === 'superadmin' ? 'user' : 'superadmin');
+        setOpenRoleDialog(true);
+    };
+
     if (loading) return <Box display="flex" justifyContent="center" mt={4}><CircularProgress /></Box>;
 
     return (
@@ -123,6 +152,22 @@ const MemberDetail = () => {
                         <Typography><strong>Address:</strong> {member?.address || 'N/A'}</Typography>
                         <Typography><strong>Type:</strong> {member?.member_type || 'N/A'}</Typography>
                         <Typography><strong>Status:</strong> {member?.status}</Typography>
+                        <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+                            <Typography><strong>Role:</strong>
+                                <Box component="span" sx={{
+                                    ml: 1,
+                                    px: 1.5,
+                                    py: 0.5,
+                                    borderRadius: 1,
+                                    bgcolor: member?.role === 'superadmin' ? 'error.main' : 'primary.main',
+                                    color: 'white',
+                                    fontSize: '0.875rem',
+                                    fontWeight: 'bold'
+                                }}>
+                                    {member?.role === 'superadmin' ? 'SuperAdmin' : 'User'}
+                                </Box>
+                            </Typography>
+                        </Box>
                     </Paper>
 
                     <Button
@@ -132,6 +177,16 @@ const MemberDetail = () => {
                         sx={{ mb: 2 }}
                     >
                         Manual Subscription Upgrade
+                    </Button>
+
+                    <Button
+                        variant="outlined"
+                        color="warning"
+                        fullWidth
+                        onClick={openRoleChangeDialog}
+                        sx={{ mb: 2 }}
+                    >
+                        {member?.role === 'superadmin' ? 'Demote to User' : 'Promote to SuperAdmin'}
                     </Button>
                 </Grid>
 
@@ -220,6 +275,52 @@ const MemberDetail = () => {
                         disabled={upgrading}
                     >
                         {upgrading ? 'Processing...' : 'Upgrade Subscription'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Role Change Dialog */}
+            <Dialog open={openRoleDialog} onClose={() => !changingRole && setOpenRoleDialog(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>
+                    {newRole === 'superadmin' ? 'Promote to SuperAdmin' : 'Demote to User'}
+                </DialogTitle>
+                <DialogContent>
+                    <Alert severity="warning" sx={{ mb: 2 }}>
+                        <strong>Warning:</strong> This action will change the user's access level.
+                    </Alert>
+                    <Typography variant="body1" gutterBottom>
+                        Are you sure you want to {newRole === 'superadmin' ? 'promote' : 'demote'} <strong>{member?.first_name} {member?.last_name}</strong>?
+                    </Typography>
+                    <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
+                        <Typography variant="body2" color="text.secondary">
+                            <strong>Current Role:</strong> {member?.role === 'superadmin' ? 'SuperAdmin' : 'User'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            <strong>New Role:</strong> {newRole === 'superadmin' ? 'SuperAdmin' : 'User'}
+                        </Typography>
+                    </Box>
+                    {newRole === 'superadmin' && (
+                        <Alert severity="info" sx={{ mt: 2 }}>
+                            SuperAdmins have full access to all system features including user management, statistics, and system settings.
+                        </Alert>
+                    )}
+                    {newRole === 'user' && (
+                        <Alert severity="info" sx={{ mt: 2 }}>
+                            Note: You cannot demote the last superadmin in the system.
+                        </Alert>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenRoleDialog(false)} disabled={changingRole}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleRoleChange}
+                        variant="contained"
+                        color="warning"
+                        disabled={changingRole}
+                    >
+                        {changingRole ? 'Processing...' : 'Confirm Role Change'}
                     </Button>
                 </DialogActions>
             </Dialog>
