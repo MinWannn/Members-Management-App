@@ -210,10 +210,10 @@ const createMember = async (req, res) => {
         } = req.body;
 
         // Check if user already exists
-        const existingUser = await query('SELECT id FROM users WHERE email = $1', [email]);
+        /* const existingUser = await query('SELECT id FROM users WHERE email = $1', [email]);
         if (existingUser.rows.length > 0) {
             return res.status(400).json({ message: 'User with this email already exists' });
-        }
+        } */
 
         // Generate password if not provided
         const bcrypt = require('bcryptjs');
