@@ -3,7 +3,7 @@ const emailService = require('../services/emailService');
 
 const getAllUsers = async (req, res) => {
     try {
-        const result = await query('SELECT id, email, first_name, last_name, role, status, member_type, created_at FROM users ORDER BY created_at DESC');
+        const result = await query('SELECT id, email, first_name, last_name, fathers_name, id_number, phone, address, role, status, member_type, created_at FROM users ORDER BY created_at DESC');
         res.json(result.rows);
     } catch (error) {
         console.error('Get all users error:', error);
